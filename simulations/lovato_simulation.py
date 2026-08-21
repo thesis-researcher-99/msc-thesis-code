@@ -28,12 +28,6 @@ Fixes relative to the first draft of this script:
    multi-topology reproduction (Section 6.2) -- switched here to
    Frobenius distance on graph Laplacians, matching the representation
    used by Ginestet/Dubey/Lovato and by KNN/SVM in the main BA sweep.
-
-3. INNER_B was applied uniformly at 500 to all six methods, including
-   Lovato's own test. Section 5.1 of the thesis states classifier
-   permutations use B=500 while Lovato's test uses B=1000 "matching
-   the value used in Lovato et al.'s own simulation studies" -- split
-   into CLASSIFIER_INNER_B and LOVATO_INNER_B to match.
 """
 
 import time
