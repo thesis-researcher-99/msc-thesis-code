@@ -1,9 +1,18 @@
 """
-Reproduces the STRUCTURE of Ginestet et al. (2017) Fig. 3 -- topology as
-rows, network size (d_nodes) as columns, sample size (n) as separate
-lines within each panel, power vs effect size (eta) on each axis -- but
-for all SIX methods in this project, not just Ginestet's own test.
-Produces one such grid figure per method.
+Runs Ginestet et al. (2017) Simulation 5's grid -- topology x d_nodes x
+n_samples x effect_size -- across all SIX methods in this project,
+checkpoints the resulting p-values to disk, and then plots the results.
+
+LAYOUT OF FIGURES:
+  - One figure per d_nodes value -> up to 4 figures total
+  - Within each figure: ROWS = topology (2), COLS = method (6)
+      -> 12 minigraphs per figure
+  - Within each panel: one line per n_samples, distinguished by COLOR
+
+Running this script twice in a row is cheap the second time: the sweep
+section checks the checkpoint first and skips any condition already
+completed, so if the checkpoint is already full, it goes straight to
+plotting.
 
 COST WARNING: the paper's own full grid is
   2 topologies x 4 d_nodes x 4 n_samples x 5 effect_sizes = 160 conditions
@@ -37,7 +46,7 @@ import os
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-from scipy.stats import beta
+import matplotlib.cm as cm
 from joblib import Parallel, delayed
 import torch
 
@@ -49,7 +58,7 @@ from permutation_test import permutation_test
 # Config
 # ----------------------------------------------------------------------
 TOPOLOGIES = ["block", "small_world"]
-D_NODES_VALUES = [10,20,30,40]                   # extremes only -- was [10,20,30,40]
+D_NODES_VALUES = [10, 20, 30, 40]            # extremes only -- was [10,20,30,40]
 N_SAMPLES_VALUES = [100, 200, 300, 400]      # extremes only -- was [100,200,300,400]
 EFFECT_SIZES = [0, 1, 2, 3, 4]
 T_TIMEPOINTS = 50
@@ -59,39 +68,13 @@ ALPHA = 0.05
 GCN_EPOCHS = 150   # ceiling; early stopping inside gcn.get_predictions handles the rest
 N_JOBS = os.cpu_count() or 1        # matches os.cpu_count() on this machine
 
+# Set this explicitly per run so it's unambiguous which experiment a given
+# checkpoint (and therefore which plots) belong to -- e.g.
+# "ginestet_sim5_grid_checkpoint_split70.pkl" vs "..._split50.pkl".
 CHECKPOINT_PATH = "ginestet_sim5_grid_checkpoint.pkl"
+OUTPUT_DIR = "."  # where the figures get written
 
 methods_list = ["KNN", "SVM", "GCN", "Ginestet", "Dubey", "Lovato"]
-
-# pvals[method][topology][d_nodes][n_samples][effect_size] -> list of p-values
-# Resume from a checkpoint if one exists, instead of starting from scratch.
-completed_conditions = set()
-if os.path.exists(CHECKPOINT_PATH):
-    with open(CHECKPOINT_PATH, "rb") as f:
-        checkpoint = pickle.load(f)
-    pvals = checkpoint["pvals"]
-    completed_conditions = checkpoint["completed_conditions"]
-    print(f"Resuming from checkpoint: {len(completed_conditions)} conditions already done.")
-
-    for m in methods_list:
-        pvals.setdefault(m, {})
-        for topo in TOPOLOGIES:
-            pvals[m].setdefault(topo, {})
-            for d in D_NODES_VALUES:
-                pvals[m][topo].setdefault(d, {})
-                for n in N_SAMPLES_VALUES:
-                    pvals[m][topo][d].setdefault(n, {})
-                    for e in EFFECT_SIZES:
-                        pvals[m][topo][d][n].setdefault(e, [])
-else:
-    pvals = {
-        m: {
-            topo: {d: {n: {e: [] for e in EFFECT_SIZES} for n in N_SAMPLES_VALUES}
-                   for d in D_NODES_VALUES}
-            for topo in TOPOLOGIES
-        }
-        for m in methods_list
-    }
 
 
 def prepare_shared(G_all):
@@ -120,7 +103,7 @@ def prepare_shared(G_all):
 # self-contained so joblib can dispatch it to any worker process.
 # ----------------------------------------------------------------------
 def run_one_replicate(topology, d_nodes, n_samples, effect_size, rep):
-    torch.set_num_threads(1)  # avoid thread contention across the 22 worker processes
+    torch.set_num_threads(1)  # avoid thread contention across the N_JOBS worker processes
 
     data = generate_data(topology=topology, d_nodes=d_nodes, n_samples=n_samples,
                           T=T_TIMEPOINTS, effect_size=effect_size, random_state=rep)
@@ -152,12 +135,37 @@ def run_one_replicate(topology, d_nodes, n_samples, effect_size, rep):
     return rep, result
 
 
-# ----------------------------------------------------------------------
-# Sweep -- one condition at a time; within each condition, all
-# B_REPLICATES reps are dispatched in parallel across N_JOBS workers.
-# Checkpoint saved after every CONDITION (not every replicate).
-# ----------------------------------------------------------------------
-if __name__ == "__main__":
+def run_sweep():
+    """Runs (or resumes) the full grid sweep, checkpointing after every
+    condition. Returns the pvals dict once every condition is done."""
+    completed_conditions = set()
+    if os.path.exists(CHECKPOINT_PATH):
+        with open(CHECKPOINT_PATH, "rb") as f:
+            checkpoint = pickle.load(f)
+        pvals = checkpoint["pvals"]
+        completed_conditions = checkpoint["completed_conditions"]
+        print(f"Resuming from checkpoint: {len(completed_conditions)} conditions already done.")
+
+        for m in methods_list:
+            pvals.setdefault(m, {})
+            for topo in TOPOLOGIES:
+                pvals[m].setdefault(topo, {})
+                for d in D_NODES_VALUES:
+                    pvals[m][topo].setdefault(d, {})
+                    for n in N_SAMPLES_VALUES:
+                        pvals[m][topo][d].setdefault(n, {})
+                        for e in EFFECT_SIZES:
+                            pvals[m][topo][d][n].setdefault(e, [])
+    else:
+        pvals = {
+            m: {
+                topo: {d: {n: {e: [] for e in EFFECT_SIZES} for n in N_SAMPLES_VALUES}
+                       for d in D_NODES_VALUES}
+                for topo in TOPOLOGIES
+            }
+            for m in methods_list
+        }
+
     total_conditions = len(TOPOLOGIES) * len(D_NODES_VALUES) * len(N_SAMPLES_VALUES) * len(EFFECT_SIZES)
     condition_idx = 0
     t_sweep_start = time.time()
@@ -197,54 +205,82 @@ if __name__ == "__main__":
 
     t_sweep_end = time.time()
     print(f"\nSweep done in {t_sweep_end - t_sweep_start:.1f}s "
-          f"({(t_sweep_end - t_sweep_start) / 60:.1f} min). "
-          f"Generating paper-style grid figures (one per method)...\n")
+          f"({(t_sweep_end - t_sweep_start) / 60:.1f} min).")
+
+    return pvals
 
 
-    # ------------------------------------------------------------------
-    # Power (point estimate only, matching the paper's own Fig. 3 style)
-    # ------------------------------------------------------------------
-    def power(p_list, alpha=ALPHA):
-        arr = np.asarray(p_list)
-        if len(arr) == 0:
-            return 0.0
-        return float(np.mean(arr < alpha))
+# ----------------------------------------------------------------------
+# Plotting -- reads whatever pvals dict the sweep produced (whether fully
+# fresh or resumed from checkpoint) and renders the by-method grid.
+# ----------------------------------------------------------------------
+def power(p_list, alpha=ALPHA):
+    arr = np.asarray(p_list)
+    if len(arr) == 0:
+        return None  # signals "no data for this condition" -> skip in plot
+    return float(np.mean(arr < alpha))
 
 
-    # ------------------------------------------------------------------
-    # One grid figure per method: rows = topology, columns = d_nodes,
-    # lines within each panel = n_samples -- matches Fig. 3's layout.
-    # ------------------------------------------------------------------
-    line_styles = ['-', '--', ':', '-.']
+def make_plots(pvals):
+    cmap = cm.get_cmap("viridis", len(N_SAMPLES_VALUES))
+    n_colors = {n: cmap(i) for i, n in enumerate(N_SAMPLES_VALUES)}
+    topology_labels = {"block": "Block", "small_world": "Small World"}
 
-    for m in methods_list:
-        fig, axes = plt.subplots(len(TOPOLOGIES), len(D_NODES_VALUES),
-                                  figsize=(4 * len(D_NODES_VALUES), 3.5 * len(TOPOLOGIES)),
+    n_rows, n_cols = len(TOPOLOGIES), len(methods_list)  # 2 x 6
+    figures_written = 0
+
+    for d_nodes in D_NODES_VALUES:
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=(3.2 * n_cols, 3.2 * n_rows),
                                   sharex=True, sharey=True, squeeze=False)
 
+        any_data_in_figure = False
+
         for row, topology in enumerate(TOPOLOGIES):
-            for col, d_nodes in enumerate(D_NODES_VALUES):
+            for col, m in enumerate(methods_list):
                 ax = axes[row][col]
-                for n_idx, n_samples in enumerate(N_SAMPLES_VALUES):
-                    powers = [power(pvals[m][topology][d_nodes][n_samples][e]) for e in EFFECT_SIZES]
-                    ax.plot(EFFECT_SIZES, powers,
-                            linestyle=line_styles[n_idx % len(line_styles)],
-                            marker='o', markersize=3, color='black',
-                            label=f'n={n_samples}')
-                ax.axhline(ALPHA, color='gray', linewidth=0.8)
+
+                for n_samples in N_SAMPLES_VALUES:
+                    powers, xs = [], []
+                    for e in EFFECT_SIZES:
+                        p = power(pvals[m][topology][d_nodes][n_samples][e])
+                        if p is not None:
+                            powers.append(p)
+                            xs.append(e)
+                    if powers:
+                        any_data_in_figure = True
+                        ax.plot(xs, powers, marker='o', markersize=3,
+                                color=n_colors[n_samples], label=f'n={n_samples}')
+
+                ax.axhline(ALPHA, color='gray', linewidth=0.8, linestyle='--', label=r'$\alpha=0.05$')
                 ax.set_ylim(-0.02, 1.02)
                 if row == 0:
-                    ax.set_title(f'Nv={d_nodes}')
+                    ax.set_title(m)
                 if col == 0:
-                    ax.set_ylabel(f'{topology}\nPower')
+                    ax.set_ylabel(f'{topology_labels[topology]}\nPower')
 
-        axes[0][-1].legend(fontsize=8, loc='lower right')
-        fig.supxlabel('Effect Size (eta)')
-        fig.suptitle(f'{m}: Power Curves (Ginestet Simulation 5 structure, B_REPLICATES={B_REPLICATES})')
+        if not any_data_in_figure:
+            plt.close(fig)
+            print(f"Skipped Nv={d_nodes}: no data in checkpoint for this node size.")
+            continue
+
+        # Single shared legend (n_samples -> color) on the top-right panel
+        axes[0][-1].legend(fontsize=7, loc='lower right')
+
+        for col in range(n_cols):
+            axes[-1][col].set_xlabel(r'Effect Size ($\eta$)')
+
         plt.tight_layout()
-        fname = f'ginestet_sim5_grid_{m}.png'
+
+        fname = os.path.join(OUTPUT_DIR, f'ginestet_sim5_bymethod_Nv{d_nodes}.png')
         plt.savefig(fname, dpi=300, bbox_inches='tight')
         plt.close(fig)
+        figures_written += 1
         print(f"Saved: {fname}")
 
-    print("\nDone.")
+    print(f"\nDone. {figures_written} figures written.")
+
+
+if __name__ == "__main__":
+    pvals = run_sweep()
+    print(f"\nGenerating paper-style grid figures from '{CHECKPOINT_PATH}'...\n")
+    make_plots(pvals)
