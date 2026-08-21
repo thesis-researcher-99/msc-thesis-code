@@ -1,15 +1,15 @@
-# msc-thesis-code
-code used in thesis
+## Repository Structure
 
-msc-thesis-code/
+```text
+graph-c2st/
 ├── README.md
 │
-├── data_generation/
-│   ├── generate_barabasi_albert.py        # Extended BA (main simulation + Dubey gamma-based)
-│   ├── generate_multi_topology.py         # Ginestet's 5-stage topology→covariance→Laplacian
-│   └── generate_lovato.py                 # Lovato's data-generating process(es)
+├── data_generation/                    # Data-generating processes and simulations
+│   ├── generate_barabasi_albert.py     # Extended BA model (main simulation + Dubey gamma-based)
+│   ├── generate_multi_topology.py      # Ginestet's 5-stage topology → covariance → Laplacian
+│   └── generate_lovato.py              # Lovato's data-generating process(es)
 │
-├── methods/
+├── methods/                            # Classifier and statistical testing methods
 │   ├── ginestet/
 │   ├── dubey/
 │   ├── lovato/
@@ -17,15 +17,15 @@ msc-thesis-code/
 │   ├── kernel_svm/
 │   └── gcn/
 │
-├── testing/
-│   ├── permutation_test.py                # shared engine (KNN/SVM/GCN fixed-prediction permutation)
+├── testing/                            # Hypothesis testing engines
+│   ├── permutation_test.py             # Shared engine (KNN/SVM/GCN fixed-prediction permutation)
 │   └── fully_designed_permutation_test.py # Lovato's exact TIP-Student/Fisher + Tippett + Phipson-Smyth
 │
-├── simulations/
-│   ├── multi_topology_simulation.py       # Ginestet's full grid sweep
-│   ├── dubey_simulation.py (rename pending) 
-│   └── lovato_simulation.py               # whatever runs Lovato's power curves
+├── simulations/                        # Pipeline execution and power curve scripts
+│   ├── multi_topology_simulation.py    # Ginestet's full grid sweep
+│   ├── dubey_simulation.py             # Dubey pipeline simulation
+│   └── lovato_simulation.py            # Lovato's power curves execution
 │
-└── diagnostics/
-    ├── gamma_distance_asymmetry.py        # mean pairwise Frobenius distance vs gamma2 (Fig 18)
-    └── gcn_hidden_channels_ablation.py    # 16 vs 32 hidden channels comparison
+└── diagnostics/                        # Diagnostic and ablation studies
+    ├── gamma_distance_asymmetry.py     # Mean pairwise Frobenius distance vs gamma2 (Fig 18)
+    └── gcn_hidden_channels_ablation.py # 16 vs 32 hidden channels comparison
