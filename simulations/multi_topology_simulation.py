@@ -30,12 +30,6 @@ natural unit of "resumable work" here (a condition either finished or it
 didn't; partial-condition results aren't saved to keep the checkpoint
 logic simple).
 
-This script STILL DEFAULTS TO A SMALL VALIDATION SUBSET (D_NODES_VALUES,
-N_SAMPLES_VALUES below) rather than the full paper grid. Run this subset
-first, check the printed per-condition timings (now with parallel
-speedup), and only widen D_NODES_VALUES / N_SAMPLES_VALUES to the full
-{10,20,30,40} / {100,200,300,400} once you have a real per-condition time
-to extrapolate from -- do NOT just uncomment the full grid and walk away.
 """
 
 import time
