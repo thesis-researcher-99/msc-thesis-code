@@ -19,12 +19,12 @@ msc-thesis-code/
 │
 ├── testing/                            # Hypothesis testing engines
 │   ├── permutation_test.py             # Shared engine (KNN/SVM/GCN fixed-prediction permutation)
-│   └── fully_designed_permutation_test.py # Lovato's exact TIP-Student/Fisher + Tippett + Phipson-Smyth
 │
 ├── simulations/                        # Pipeline execution and power curve scripts
 │   ├── multi_topology_simulation.py    # Ginestet's full grid sweep
 │   ├── dubey_simulation.py             # Dubey pipeline simulation
-│   └── lovato_simulation.py            # Lovato's power curves execution
+│   ├── lovato_simulation.py            # Lovato's power curves execution
+│   └── fully_designed_permutation_test.py 
 │
 └── diagnostics/                        # Diagnostic and ablation studies
     ├── gamma_distance_asymmetry.py     # Mean pairwise Frobenius distance vs gamma2 (Fig 18)
