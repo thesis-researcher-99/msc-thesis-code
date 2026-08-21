@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import torch
 
-from ginestet_data_gen import generate_data
+from data_generation.topology_covariance_datagen import generate_data
 from methods import gcn
 
 # ----------------------------------------------------------------------
@@ -86,7 +86,7 @@ def run_one_replicate(topology, n_samples, effect_size, rep):
     # Same as the main grid: derive a p-value via the permutation test on
     # classifier predictions, so power is computed identically to the
     # main sweep's GCN results and the two are directly comparable.
-    from permutation_test import permutation_test
+    from testing.permutation_test import permutation_testpermutation_test
     _, p_val, _ = permutation_test(y_pred, y_test, B=INNER_B, random_state=rep)
 
     return rep, p_val
