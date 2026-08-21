@@ -5,9 +5,9 @@ msc-thesis-code/
 ├── README.md
 │
 ├── data_generation/                        # Data-generating processes and simulations
-│   ├── generate_barabasi_albert.py         # Extended BA model (main simulation + Dubey gamma-based)
-│   ├── generate_multi_topology.py          # Ginestet's 5-stage topology → covariance → Laplacian
-│   └── generate_lovato.py                  # Lovato's data-generating process(es)
+│   ├── barabasi_albert_datagen.py        
+│   ├── binomial_edgeweight_datagen.py          
+│   └── topology_covariance_datagen.py                  
 │
 ├── methods/                                # Classifier and statistical testing methods
 │   ├── ginestet/
@@ -17,15 +17,15 @@ msc-thesis-code/
 │   ├── kernel_svm/
 │   └── gcn/
 │
-├── testing/                                # Hypothesis testing engines
-│   ├── permutation_test.py                 # Shared engine (KNN/SVM/GCN fixed-prediction permutation)
+├── testing/                                
+│   ├── permutation_test.py                 
 │
 ├── simulations/                            # Pipeline execution and power curve scripts
-│   ├── multi_topology_simulation.py        # Ginestet's full grid sweep
-│   ├── dubey_simulation.py                 # Dubey pipeline simulation
-│   ├── lovato_simulation.py                # Lovato's power curves execution
-│   └── fully_designed_permutation_test.py 
+│   ├── ba_sweep.py        
+│   ├── ba_sweep_resubstitution_n25.py                 
+│   ├── binomial_edgeweight_sweep.py                
+│   └── topology_covariance_sweep.py 
 │
 └── diagnostics/                            # Diagnostic and ablation studies
-    ├── gamma_distance_asymmetry.py         # Mean pairwise Frobenius distance vs gamma2 (Fig 18)
+    ├── ba_distance_asymmetry_check.py         # Mean pairwise Frobenius distance vs gamma2 (Fig X)
     └── gcn_hidden_channels_ablation.py     # 16 vs 32 hidden channels comparison
