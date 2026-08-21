@@ -41,9 +41,9 @@ from scipy.stats import beta
 from joblib import Parallel, delayed
 import torch
 
-from lovato_data_gen import generate_data, SCENARIOS
+from data_generation.binomial_edgeweight_datagen import generate_data, SCENARIOS
 from methods import kernel_svm, gcn, ginestet2017, dubey2019, knn, lovato2020
-from permutation_test import permutation_test
+from testing.permutation_test import permutation_test
 
 # ----------------------------------------------------------------------
 # Config
