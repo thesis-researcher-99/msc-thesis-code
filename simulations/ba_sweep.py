@@ -9,9 +9,9 @@ from scipy.stats import beta
 from joblib import Parallel, delayed
 import torch
 
-from generate_barabasi_albert import generate_data
+from data_generation.barabasi_albert_datagen import generate_data
 from methods import kernel_svm, gcn, ginestet2017, dubey2019, knn, lovato2020
-from permutation_test import permutation_test
+from testing.permutation_test import permutation_test, permutation_test_refit
 
 # ----------------------------------------------------------------------
 # Config
