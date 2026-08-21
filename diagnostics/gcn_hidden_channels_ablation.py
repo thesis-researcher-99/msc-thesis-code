@@ -50,7 +50,7 @@ HIDDEN_CHANNELS_OLD = 16                      # for reference / labeling only
 GCN_EPOCHS = 150
 N_JOBS = 22
 
-CHECKPOINT_PATH = "gcn_hidden32_Nv40_checkpoint_split50.pkl"
+CHECKPOINT_PATH = "gcn_hidden32_Nv40_checkpoint.pkl"
 
 completed_conditions = set()
 if os.path.exists(CHECKPOINT_PATH):
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     # side by side -- directly answers "did doubling hidden_channels help".
     # ------------------------------------------------------------------
     old_pvals = None
-    main_checkpoint_path = "ginestet_sim5_grid_checkpoint_split50.pkl"
+    main_checkpoint_path = "ginestet_sim5_grid_checkpoint.pkl"
     if os.path.exists(main_checkpoint_path):
         with open(main_checkpoint_path, "rb") as f:
             main_checkpoint = pickle.load(f)
