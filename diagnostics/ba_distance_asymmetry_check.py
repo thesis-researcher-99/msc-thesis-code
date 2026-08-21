@@ -27,7 +27,7 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from data_gen import generate_ba_with_attractiveness
+from data_generation.barabasi_albert_datagen import generate_ba_with_attractiveness
 
 N_SAMPLES = 100          # graphs per group, per g
 N_NODES = 10
