@@ -1,7 +1,7 @@
 ## Repository Structure
 
 ```text
-graph-c2st/
+msc-thesis-code/
 ├── README.md
 │
 ├── data_generation/                    # Data-generating processes and simulations
