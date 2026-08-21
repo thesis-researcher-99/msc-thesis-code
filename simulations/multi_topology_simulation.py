@@ -58,8 +58,8 @@ from permutation_test import permutation_test
 # Config
 # ----------------------------------------------------------------------
 TOPOLOGIES = ["block", "small_world"]
-D_NODES_VALUES = [10, 20, 30, 40]            # extremes only -- was [10,20,30,40]
-N_SAMPLES_VALUES = [100, 200, 300, 400]      # extremes only -- was [100,200,300,400]
+D_NODES_VALUES = [10, 20, 30, 40]            
+N_SAMPLES_VALUES = [100, 200, 300, 400]      
 EFFECT_SIZES = [0, 1, 2, 3, 4]
 T_TIMEPOINTS = 50
 B_REPLICATES = 100
