@@ -86,7 +86,7 @@ def run_one_replicate(topology, n_samples, effect_size, rep):
     # Same as the main grid: derive a p-value via the permutation test on
     # classifier predictions, so power is computed identically to the
     # main sweep's GCN results and the two are directly comparable.
-    from testing.permutation_test import permutation_testpermutation_test
+    from testing.permutation_test import permutation_test
     _, p_val, _ = permutation_test(y_pred, y_test, B=INNER_B, random_state=rep)
 
     return rep, p_val
