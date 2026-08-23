@@ -10,9 +10,9 @@ msc-thesis-code/
 │   └── topology_covariance_datagen.py                  
 │
 ├── methods/                                # Classifier and statistical testing methods
-│   ├── ginestet/
-│   ├── dubey/
-│   ├── lovato/
+│   ├── ginestet2017/
+│   ├── dubey2019/
+│   ├── lovato2020/
 │   ├── knn/
 │   ├── kernel_svm/
 │   └── gcn/
