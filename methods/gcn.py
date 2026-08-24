@@ -1,3 +1,26 @@
+"""
+Graph Convolutional Network classifier two-sample test.
+ 
+Classifier-based two-sample test (Lopez-Paz & Oquab, 2017 C2ST framework):
+trains a 3-layer GCN (GCNConv + GraphNorm, weighted/z-scored-degree node
+features, real edge weights threaded through message passing where
+present) to discriminate between the two groups directly from the raw
+graphs, then feeds its predictions to a permutation test (see
+testing/permutation_test.py) to obtain a p-value from the held-out
+misclassification error. Unlike knn.py/kernel_svm.py, this operates on
+the raw graphs (via graphs_to_pyg_weighted_normalized), not a
+precomputed distance/kernel matrix.
+ 
+Entry points:
+  get_predictions(G_all, y, idx_train, idx_test, ...) -> (y_pred, y_test)
+      Fixed train/test split -- fit once (with early stopping on training-
+      loss plateau), predict once. Feeds into the generic permutation test.
+  build_base_data(G_all) + fit_predict_full(base_data_list, y, ...) -> y_pred
+      Resubstitution variant: features/edges precomputed once via
+      build_base_data (label-independent), then fit_predict_full re-fits
+      per permutation with only the labels changing.
+Neither entry point computes a p-value itself -- see testing/permutation_test.py.
+"""
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -73,20 +96,6 @@ def get_predictions(G_all, y, idx_train, idx_test, hidden_channels=16,
     """Train a GCN ONCE on the shared train split, predict ONCE on the shared
     test split. Uses weighted, z-scored degree features + edge_weight message
     passing throughout (see graphs_to_pyg_weighted_normalized).
-
-    Speed changes vs. the original fixed-epoch/mini-batch version:
-      - full-batch training (one batch per epoch, no DataLoader shuffling
-        overhead) -- safe here since the whole train split fits in memory.
-      - hidden_channels reduced 64 -> 16 by default: graphs are 10 nodes
-        with a 1-D input feature, so a 64-dim hidden representation is
-        almost certainly more capacity than needed.
-      - early stopping on training-loss plateau (patience epochs with no
-        improvement > tol) instead of a fixed epoch count. This lets
-        large-effect replicates (per the gamma2=2.0 diagnostic, converging
-        by ~epoch 25-30) stop early, while near-null replicates (gamma2
-        close to 2.5, which showed no movement even at 150 epochs in
-        earlier diagnostics) still get the full epoch budget rather than
-        being cut short.
     """
     torch.manual_seed(seed)
 
