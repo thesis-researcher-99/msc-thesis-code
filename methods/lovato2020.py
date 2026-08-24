@@ -1,3 +1,26 @@
+"""
+Lovato et al. (2020) -- "Model-free two-sample test for network-valued
+data" (Statistics & Probability Letters / arXiv).
+ 
+Inter-point-distance permutation test on graph Laplacians under the
+Frobenius distance: two statistics targeting different moments --
+T_IP-Student (mean differences, a Welch-t-style ratio of cross-group to
+within-group squared distances) and T_IP-Fisher (variance differences, a
+ratio of within-group variance estimates) -- combined via Tippett's
+non-parametric combination function into T_IP-StudentFisher, sensitive to
+differences in either moment. Significance for each statistic uses the
+exact Phipson & Smyth (2010) permutation p-value (after Dwass, 1957),
+which guarantees exact Type I error control regardless of sample size or
+number of permutations sampled -- unlike ginestet2017.py/dubey2019.py,
+which rely on asymptotic chi^2 approximations.
+ 
+Entry point: run_test(G_all, y, B=1000, random_state=42, combine=True,
+    laplacians=None) -> dict with T_student/p_student, T_fisher/p_fisher,
+    mt (total number of distinct permutations), and (if combine=True)
+    T_combined/p_combined -- the last is what run_one_replicate() in the
+    sweep scripts actually uses.
+Full-sample hypothesis test -- no train/test split.
+"""
 import math
 import numpy as np
 import networkx as nx
