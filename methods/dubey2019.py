@@ -1,3 +1,21 @@
+"""
+Dubey & Muller (2019) -- "Frechet analysis of variance for random
+objects" (Biometrika).
+ 
+k-sample Frechet ANOVA statistic T_n on graph Laplacians treated as points
+in a metric space under the Frobenius distance. Combines a location
+component (F_n, ANOVA-style, differences in Frechet means) and a scale
+component (U_n, generalized Levene-type, differences in Frechet
+variances); under H0 the F_n term is asymptotically negligible and only
+U_n drives the limiting distribution, so T_n ~ chi^2(k-1) (see the
+docstring on run_test() for the df derivation note).
+ 
+Entry point: run_test(G_all, y, laplacians=None) ->
+    {"statistic": T_n, "F_n": ..., "U_n": ..., "p_value": ..., "dof": k-1}
+Full-sample hypothesis test -- no train/test split. See
+dubey_test_statistic()'s docstring below for a known small-sample
+numerical limitation in the variance estimator.
+"""
 import numpy as np
 import networkx as nx
 from scipy.stats import chi2
@@ -21,14 +39,22 @@ def dubey_test_statistic(groups):
     """
     groups: list of k lists of Laplacian matrices (one list per population).
     Implements Dubey & Muller (2019) Frechet ANOVA k-sample test statistic T_n.
-
-    KNOWN LIMITATION -- small-sample instability: sigma2s[j] (the estimated
-    Frechet variance-of-variance) sits in the denominator below. At small
-    within-group sample sizes it can come out at/near zero, producing a
-    RuntimeWarning (divide by zero / invalid value) and an unreliable
-    T_n/p-value, rather than raising an error. Not observed at any sample
-    size used in this thesis (n=25/50/100/450 all checked clean); relevant
-    mainly if reusing this function on new data with small n per group.
+ 
+    KNOWN LIMITATION -- small-sample numerical instability: the estimated
+    Frechet variance-of-variance (sigma2s[j], via sigma_hat_sq) sits in the
+    denominator of both term1 and term2 below. At small within-group sample
+    sizes, sigma2s[j] can come out numerically at or near zero (the squared
+    distances to that group's Frechet mean end up too uniform to estimate a
+    variance from), which silently produces an arbitrarily inflated,
+    statistically meaningless T_n (and a RuntimeWarning: divide by zero /
+    invalid value) rather than a valid p-value -- no exception is raised.
+    Observed in practice at n_samples=15 per group (10-node BA graphs); NOT
+    observed in any sweep over n_samples in {25, 50, 100, 450} used
+    elsewhere in this project (20 reps each, gamma2 in {2.0, 2.5, 3.0}), so
+    this has not affected any thesis result to date. If reusing this
+    function on new data with small per-group sample sizes, check for
+    RuntimeWarning output and treat the resulting p-value as unreliable if
+    one appears.
     """
     k = len(groups)
     n_j = np.array([len(g) for g in groups])
