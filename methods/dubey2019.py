@@ -21,6 +21,14 @@ def dubey_test_statistic(groups):
     """
     groups: list of k lists of Laplacian matrices (one list per population).
     Implements Dubey & Muller (2019) Frechet ANOVA k-sample test statistic T_n.
+
+    KNOWN LIMITATION -- small-sample instability: sigma2s[j] (the estimated
+    Frechet variance-of-variance) sits in the denominator below. At small
+    within-group sample sizes it can come out at/near zero, producing a
+    RuntimeWarning (divide by zero / invalid value) and an unreliable
+    T_n/p-value, rather than raising an error. Not observed at any sample
+    size used in this thesis (n=25/50/100/450 all checked clean); relevant
+    mainly if reusing this function on new data with small n per group.
     """
     k = len(groups)
     n_j = np.array([len(g) for g in groups])
@@ -47,6 +55,8 @@ def dubey_test_statistic(groups):
         for l in range(j + 1, k):
             U_n += (lambdas[j] * lambdas[l] / (sigma2s[j] * sigma2s[l])) * (Vs[j] - Vs[l]) ** 2
 
+    # NOTE: sigma2s can be ~0 at small n_j, causing a silent divide-by-zero
+    # here (RuntimeWarning) and an unreliable T_n. See docstring above.
     term1 = n * U_n / np.sum(lambdas / sigma2s)
     term2 = n * F_n ** 2 / np.sum(lambdas ** 2 * sigma2s)
 
