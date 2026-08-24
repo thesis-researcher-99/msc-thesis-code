@@ -1,3 +1,20 @@
+"""
+Ginestet et al. (2017) -- "Hypothesis Testing For Network Data In
+Functional Neuroimaging" (Annals of Applied Statistics).
+ 
+Two-sample Wald-type T2 test on graph Laplacians: each group's Laplacians
+are half-vectorized (upper-triangular, off-diagonal entries) into R^p,
+p = d(d-1)/2; group means are compared via a Hotelling-type quadratic
+form, using a pooled covariance estimate (Ledoit-Wolf shrinkage, then
+projected to the nearest positive-definite matrix via nearest_pd()) for
+numerical stability at high dimension relative to sample size. Under H0
+(equal population mean networks), T2 is asymptotically chi^2 with p
+degrees of freedom.
+ 
+Entry point: run_test(G_all, y, shrinkage=True, laplacians=None) ->
+    {"statistic": T2, "p_value": ..., "dof": p}
+Full-sample hypothesis test -- no train/test split.
+"""
 import networkx as nx
 import numpy as np
 from scipy.stats import chi2
@@ -52,7 +69,7 @@ def run_test(G_all, y, shrinkage=True, laplacians=None):
     """
     Runs the Ginestet et al. (2017) T2 test on the FULL dataset
     (no train/test split — this is a hypothesis test, not a classifier).
-
+ 
     laplacians: optional list of precomputed Laplacian arrays, in the same
     order as G_all. If provided, skips recomputing them here -- pass this
     in when the caller (e.g. a sweep script) has already built the
