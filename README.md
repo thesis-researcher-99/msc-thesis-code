@@ -27,7 +27,7 @@ msc-thesis-code/
 │   └── topology_covariance_sweep.py 
 │
 ├── diagnostics/                            # Diagnostic and ablation studies
-│   ├── ba_distance_asymmetry_check.py         # Mean pairwise Frobenius distance vs gamma2 (Fig X)
+│   ├── ba_distance_asymmetry_check.py         # Mean pairwise Frobenius distance vs gamma2
 │   └── gcn_hidden_channels_ablation.py     # 16 vs 32 hidden channels comparison
 │
 └── quickstart.ipynb                        # Worked examples: running each method on toy data
